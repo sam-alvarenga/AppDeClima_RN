@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, StyleSheet, Text, View, TextInput, Button } from 'react-native';
+import { Alert, StyleSheet, Text, View, TextInput, Button, ActivityIndicator } from 'react-native';
 import React, { useState } from 'react'; //Importa o react e o hook useState para gerenciar o estado dos componentes.
 import axios from 'axios'; //Importa a biblioteca axios para fazer requisições HTTP (chamadas à API)
 
@@ -32,22 +32,68 @@ export default function App() { //Define e exporta o componente principal do apl
     setDadosClima(null); //Limpa os dadso do clima anteriores (se houver) antes de fazer uma nova busca.
 
     setErro(null); //Limpa mensagens de erro anteriores antes de fazer uma nova busca.
+
+    //inicia um bloco 'thy' para tentar executar a chamada à API, o que pode gerar erros
+    try {
+      //Faz uma requisição HTTP GET para a API_URL_BASE usando axios. 'await' pausa a função até a promessa seja resolvida
+      const repondese = await axios.get(API_URL_BASE, {
+        params: {
+          q: cidade,
+          appid: API_Key,
+          units: 'metric',
+          lang: 'pt_br',
+        },
+      }); //Fim da chamada axios.get. A variável 'response' conterá a reposta da API
+
+      setDadosClima(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar dados do clima:", error.response ? error.response.data : error.message);
+      if (error.response && error.response.status === 404) {
+        setErro(`Cidade "${cidade}" não encontrada. Verifique o nome e tente novamente.`)
+
+      } else if (error.response && error.response.status === 401) {
+
+        setErro(`Chave de API inválida ou não autorizada. Verifique sua API Key`);
+
+      } //Fim da verificação do status 401. 
+      else {
+
+        setErro('Não foi possível buscar os dados do clima. Tente novamente mais tarde');
+      }//Fim do bloco 'else' para outros erros
+    } finally {
+      //Estado 'carregando' falso, pois a tentantiva de busca terminou (com sucesso ou falha)
+      setCarregando(false)
+    }
   }
-  return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Previsão do Tempo</Text>
-      
-      <TextInput style={styles.input} placeholder="Digite o nome da cidade"
-        value={cidade} //O valor exibido no TExtInput é controlado pelo estado 'cidade'.
-        onChangeText={setCidade} //Quando o texto no TextInput muda, a função 'setCidade' é chmada par atualizar o estado 'cidade'.
-      />
-      {/* FInm do componente TextInput */}
-
-      <Button title='Buscar Clima' onsPress={buscarClima} disabled={carregando}></Button>
-    </View>
-
-  );
 }
+return (
+  <View style={styles.container}>
+    <Text style={styles.titulo}>Previsão do Tempo</Text>
+
+    <TextInput style={styles.input} placeholder="Digite o nome da cidade"
+      value={cidade} //O valor exibido no TExtInput é controlado pelo estado 'cidade'.
+      onChangeText={setCidade} //Quando o texto no TextInput muda, a função 'setCidade' é chmada par atualizar o estado 'cidade'.
+    />
+    {/* FInm do componente TextInput */}
+
+    <Button title='Buscar Clima' onsPress={buscarClima} disabled={carregando}></Button>
+
+    {carregando && <ActivityIndicator style={styles.info} size="large" color="#0000ff" />}
+
+    {erro && <Text style={styles.erro}>{erro}</Text>}
+
+    {dadosClima && (
+      <View style={styles.climaContainer}>
+
+        <Text style={styles.nomeCidade}>{dadosClima.name}, {dadosClima.sys.country}</Text>
+        <Image style={styles.iconeClima} source={{uri : }} />
+
+      </View>
+    )}
+  </View>
+
+);
+
 
 const styles = StyleSheet.create({
 
