@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, StyleSheet, Text, View, TextInput, Button, ActivityIndicator } from 'react-native';
+import { Alert, StyleSheet, Text, View, TextInput, Button, ActivityIndicator, Image } from 'react-native';
 import React, { useState } from 'react'; //Importa o react e o hook useState para gerenciar o estado dos componentes.
 import axios from 'axios'; //Importa a biblioteca axios para fazer requisições HTTP (chamadas à API)
 
@@ -36,7 +36,7 @@ export default function App() { //Define e exporta o componente principal do apl
     //inicia um bloco 'thy' para tentar executar a chamada à API, o que pode gerar erros
     try {
       //Faz uma requisição HTTP GET para a API_URL_BASE usando axios. 'await' pausa a função até a promessa seja resolvida
-      const repondese = await axios.get(API_URL_BASE, {
+      const response = await axios.get(API_URL_BASE, {
         params: {
           q: cidade,
           appid: API_Key,
@@ -65,36 +65,118 @@ export default function App() { //Define e exporta o componente principal do apl
       setCarregando(false)
     }
   }
+  return (
+    <View style={styles.container}>
+      <Text style={styles.titulo}>Previsão do Tempo</Text>
+
+      <TextInput style={styles.input} placeholder="Digite o nome da cidade"
+        value={cidade} //O valor exibido no TExtInput é controlado pelo estado 'cidade'.
+        onChangeText={setCidade} //Quando o texto no TextInput muda, a função 'setCidade' é chmada par atualizar o estado 'cidade'.
+      />
+      {/* FInm do componente TextInput */}
+
+      <Button title='Buscar Clima' onPress={buscarClima} disabled={carregando}></Button>
+
+      {carregando && <ActivityIndicator style={styles.info} size="large" color="#0000ff" />}
+
+      {erro && <Text style={styles.erro}>{erro}</Text>}
+
+      {dadosClima && (
+        <View style={styles.climaContainer}>
+
+          <Text style={styles.nomeCidade}>{dadosClima.name}, {dadosClima.sys.country}</Text>
+          <Image style={styles.iconeClima} source={{ uri: `https://openweathermap.org/img/wn/${dadosClima.weather[0].icon}@2x.png` }} />
+          <Text style={styles.temperatura}>{dadosClima.main.temp}°C</Text>
+          <Text style={styles.descricao}>{dadosClima.weather[0].description}</Text>
+
+          {/* Exibi a sensação termica (dadosClima.main.feels_like) */}
+          <Text style={styles.info}>Sensação Térmica{dadosClima.main.feels_like}°C</Text>
+          {/*Exibi a umidade (dadosClima.main.humidity)  */}
+          <Text style={styles.info}>Umidade:{dadosClima.main.humidity}</Text>
+          {/* Exibi a velocidade do vento (dadosClima.wind.speed) */}
+          <Text style={styles.info}>Vento: {dadosClima.wind.speed} m/s</Text>
+        </View>
+      )}
+    </View>
+
+  );
 }
-return (
-  <View style={styles.container}>
-    <Text style={styles.titulo}>Previsão do Tempo</Text>
 
-    <TextInput style={styles.input} placeholder="Digite o nome da cidade"
-      value={cidade} //O valor exibido no TExtInput é controlado pelo estado 'cidade'.
-      onChangeText={setCidade} //Quando o texto no TextInput muda, a função 'setCidade' é chmada par atualizar o estado 'cidade'.
-    />
-    {/* FInm do componente TextInput */}
-
-    <Button title='Buscar Clima' onsPress={buscarClima} disabled={carregando}></Button>
-
-    {carregando && <ActivityIndicator style={styles.info} size="large" color="#0000ff" />}
-
-    {erro && <Text style={styles.erro}>{erro}</Text>}
-
-    {dadosClima && (
-      <View style={styles.climaContainer}>
-
-        <Text style={styles.nomeCidade}>{dadosClima.name}, {dadosClima.sys.country}</Text>
-        <Image style={styles.iconeClima} source={{uri : }} />
-
-      </View>
-    )}
-  </View>
-
-);
 
 
 const styles = StyleSheet.create({
 
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f4f8',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Alterado para flex-start para dar espaço ao conteúdo
+    paddingTop: 80, // Aumentado para evitar sobreposição com a status bar e dar margem
+    paddingHorizontal: 20,
+  },
+  titulo: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  input: {
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    width: '100%', // Ocupar a largura total
+    fontSize: 16,
+  },
+  climaContainer: {
+    marginTop: 30,
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+    width: '100%', // Ocupar a largura total
+  },
+  nomeCidade: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  iconeClima: {
+    width: 100,
+    height: 100,
+  },
+  temperatura: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    marginVertical: 10,
+    color: '#ff8c00',
+  },
+  descricao: {
+    fontSize: 20,
+    textTransform: 'capitalize',
+    marginBottom: 15,
+  },
+  info: {
+    fontSize: 16,
+    marginTop: 8,
+    color: '#555',
+  },
+  erro: {
+    color: 'red',
+    marginTop: 20,
+    fontSize: 16,
+    textAlign: 'center',
+  }
 });
+
